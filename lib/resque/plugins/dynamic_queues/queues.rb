@@ -21,7 +21,7 @@ module Resque
 
           return queues_without_dynamic if queue_names.grep(/(^!)|(^@)|(\*)/).size == 0
 
-          real_queues =  Array(redis.smembers(:queues)) # Here `redis` refers to the Resque::Worker's redis
+          real_queues =  Array(self.class.redis.smembers(:queues)) # Here `self.class` refers to Resque::Worker
           matched_queues = []
 
           while q = queue_names.shift

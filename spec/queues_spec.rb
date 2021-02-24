@@ -2,6 +2,13 @@ require "spec_helper"
 
 describe "Dynamic Queues" do
 
+  before(:all) do
+    # In enterprise, Resque::Worker points to its own redis and not Resque.redis
+    if Resque::Worker.respond_to?(:redis=)
+      Resque::Worker.redis = Resque.redis
+    end
+  end
+
   before(:each) do
     Resque.redis.flushall
   end
@@ -56,6 +63,17 @@ describe "Dynamic Queues" do
   end
 
   context "attributes" do
+    # Test case related to enterprise, where get_dynamic_queus is called from worker
+    context "For Resque::Worker" do
+      context 'when get_dynamic_queue is called' do
+        before { Resque.set_dynamic_queues({'foo' => ['bar'], 'baz' => ['boo']}) }
+        it 'returns the pattern' do
+          worker = Resque::Worker.new("foo")
+          worker.get_dynamic_queue('foo').should == ['bar']
+        end
+      end
+    end
+
     it "should always have a fallback pattern" do
       Resque.get_dynamic_queues.should == {'default' => ['*']}
     end
